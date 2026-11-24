@@ -1,8 +1,5 @@
 # 00_verif_donnees.R
-# Télécharge les questions écrites de l'AN (15e à 17e législature) et compte
-# celles qui citent le moustique tigre, pour juger si le corpus est exploitable.
-# La 14e (2012-2017) est exclue : le serveur coupe son zip après quelques Mo,
-# depuis R comme depuis un navigateur (essais du 24/11/2026).
+# Télécharge les questions écrites de l'AN (15e à 17e législature) et compte celles qui citent le moustique tigre, pour juger si le corpus est exploitable. La 14e (2012-2017) est exclue : le serveur coupe son zip après quelques Mo, depuis R comme depuis un navigateur (essais du 24/11/2026).
 
 library(stringr)
 library(here)
@@ -18,15 +15,14 @@ compter_legislature <- function(leg) {
   url <- paste0("https://data.assemblee-nationale.fr/static/openData/repository/",
                 leg, "/questions/questions_ecrites/", noms_zip[as.character(leg)])
   zip_local <- here("data", "raw", paste0("AN_QE_leg", leg, ".zip"))
-  dossier   <- here("data", "raw", paste0("AN_QE_leg", leg))
+  dossier <- here("data", "raw", paste0("AN_QE_leg", leg))
 
   # http_version = 2 force HTTP/1.1 : en HTTP/2, le serveur de l'AN coupe les gros fichiers
   if (!file.exists(zip_local)) {
     curl::curl_download(url, zip_local, handle = curl::new_handle(http_version = 2))
   }
 
-  # unzip() ne plante pas si l'extraction est incomplète : on compare donc
-  # le nombre de fichiers extraits au contenu du zip
+  # unzip() ne plante pas si l'extraction est incomplète : on compare donc le nombre de fichiers extraits au contenu du zip
   n_attendu <- sum(grepl("\\.json$", unzip(zip_local, list = TRUE)$Name))
   n_present <- length(list.files(dossier, pattern = "\\.json$", recursive = TRUE))
   if (n_present < n_attendu) unzip(zip_local, exdir = dossier, overwrite = TRUE)

@@ -1,6 +1,5 @@
 # 05_typologie.R
-# Typologie des discours par dictionnaire : pour chaque question, on compte les
-# termes de cinq registres et on retient le registre dominant.
+# Typologie des discours par dictionnaire : pour chaque question, on compte les termes de cinq registres et on retient le registre dominant.
 # Sorties : data/processed/corpus_types.csv, figures/fig3_types_discours.png
 
 library(here)
@@ -37,8 +36,8 @@ for (r in names(registres)) {
 
 # Registre dominant : celui qui a le plus d'occurrences. Égalité -> "mixte".
 scores <- as.matrix(corpus[names(registres)])
-maxi   <- apply(scores, 1, max)
-n_max  <- rowSums(scores == maxi)
+maxi <- apply(scores, 1, max)
+n_max <- rowSums(scores == maxi)
 corpus$type <- ifelse(maxi == 0, "aucun",
                ifelse(n_max > 1, "mixte", names(registres)[max.col(scores, ties.method = "first")]))
 

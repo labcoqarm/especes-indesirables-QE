@@ -1,7 +1,5 @@
 # 02_corpus_Senat.R
-# Corpus des questions écrites du Sénat (depuis le 21/06/2017, comme l'AN)
-# portant sur une des espèces étudiées, avec les mêmes règles que le script 01.
-# Source : dump PostgreSQL de data.senat.fr, lu comme un fichier texte.
+# Corpus des questions écrites du Sénat (depuis le 21/06/2017, comme l'AN) portant sur une des espèces étudiées, avec les mêmes règles que le script 01. Source : dump PostgreSQL de data.senat.fr, lu comme un fichier texte.
 # Sortie : data/processed/corpus_Senat.csv
 
 library(here)
@@ -9,21 +7,19 @@ library(stringr)
 source(here("scripts", "regles_corpus.R"))
 
 zip_senat <- here("data", "raw", "senat_questions.zip")
-sql       <- here("data", "raw", "questions.sql")
+sql <- here("data", "raw", "questions.sql")
 if (!file.exists(zip_senat)) {
   curl::curl_download("https://data.senat.fr/data/questions/questions.zip", zip_senat)
 }
 if (!file.exists(sql)) unzip(zip_senat, files = "questions.sql", exdir = here("data", "raw"))
 
 # Lecture de la table tam_questions -------------------------------------------
-# Dans le dump, ses lignes sont entre "COPY tam_questions (colonnes) FROM stdin;"
-# et "\." : une question par ligne, colonnes séparées par des tabulations,
-# "\N" pour une valeur vide. Le fichier fait 1 Go, on le lit par paquets.
+# Dans le dump, ses lignes sont entre "COPY tam_questions (colonnes) FROM stdin;" et "\." : une question par ligne, colonnes séparées par des tabulations, "\N" pour une valeur vide. Le fichier fait 1 Go, on le lit par paquets.
 
 motif_toutes <- regex(paste(especes, collapse = "|"), ignore_case = TRUE)
 con <- file(sql, open = "r", encoding = "UTF-8")
 colonnes <- NULL
-lignes   <- character(0)
+lignes <- character(0)
 
 repeat {
   paquet <- readLines(con, n = 50000)
@@ -33,7 +29,7 @@ repeat {
     debut <- which(startsWith(paquet, "COPY tam_questions "))
     if (length(debut) == 0) next
     colonnes <- strsplit(str_match(paquet[debut], "\\((.*)\\)")[, 2], ", ")[[1]]
-    paquet   <- paquet[-(1:debut)]
+    paquet <- paquet[-(1:debut)]
   }
 
   fin <- which(paquet == "\\.")
@@ -54,21 +50,21 @@ stopifnot(!anyNA(senat$date), !anyNA(senat$circonscription))
 
 # Même format que le corpus AN ------------------------------------------------
 
-sans_echappements <- function(x) str_replace_all(x, "\\\\[nrt]", " ")  # \n, \r, \t du dump
+sans_echappements <- function(x) str_replace_all(x, "\\\\[nrt]", " ") # \n, \r, \t du dump
 
 corpus <- data.frame(
-  id          = senat$reference,
-  chambre     = "Senat",
-  type        = senat$natquecod,
-  date        = as.character(senat$date),
-  acteur      = senat$matricule,
-  mandat      = NA,
-  groupe      = senat$groupe,
-  rubrique    = senat$rubrique,
-  titre       = nettoyer(sans_echappements(senat$titre)),
-  texte       = nettoyer(sans_echappements(senat$txtque)),
-  departement = senat$circonscription,  # nom seulement, le code est ajouté au script 03
-  code_dep    = NA
+  id = senat$reference,
+  chambre = "Senat",
+  type = senat$natquecod,
+  date = as.character(senat$date),
+  acteur = senat$matricule,
+  mandat = NA,
+  groupe = senat$groupe,
+  rubrique = senat$rubrique,
+  titre = nettoyer(sans_echappements(senat$titre)),
+  texte = nettoyer(sans_echappements(senat$txtque)),
+  departement = senat$circonscription, # nom seulement, le code est ajouté au script 03
+  code_dep = NA
 )
 stopifnot(!anyNA(corpus$texte))
 

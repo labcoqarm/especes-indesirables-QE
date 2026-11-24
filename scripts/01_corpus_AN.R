@@ -1,7 +1,5 @@
 # 01_corpus_AN.R
-# Corpus des questions écrites de l'AN (juin 2017 à 2026) portant sur une des
-# espèces étudiées. On cherche dans la question seulement, pas dans la réponse
-# du ministre. Sortie : data/processed/corpus_AN.csv
+# Corpus des questions écrites de l'AN (juin 2017 à 2026) portant sur une des espèces étudiées. On cherche dans la question seulement, pas dans la réponse du ministre. Sortie : data/processed/corpus_AN.csv
 
 library(here)
 library(stringr)
@@ -27,21 +25,21 @@ cat(length(fichiers), "fichiers candidats sur", length(candidat), "\n")
 ou_na <- function(x) if (is.null(x)) NA_character_ else paste(unlist(x), collapse = " ; ")
 
 lire_question <- function(f) {
-  q   <- fromJSON(f, simplifyVector = FALSE)$question
+  q <- fromJSON(f, simplifyVector = FALSE)$question
   idx <- q$indexationAN
-  titre <- if (!is.null(idx$analyses)) idx$analyses$analyse else idx$ANALYSE$ANA  # varie selon la législature
-  tq  <- q$textesQuestion$texteQuestion
+  titre <- if (!is.null(idx$analyses)) idx$analyses$analyse else idx$ANALYSE$ANA # varie selon la législature
+  tq <- q$textesQuestion$texteQuestion
   data.frame(
-    id       = q$uid,
-    chambre  = "AN",
-    type     = ou_na(q$type),
-    date     = ou_na(tq$infoJO$dateJO),
-    acteur   = ou_na(q$auteur$identite$acteurRef),
-    mandat   = ou_na(q$auteur$identite$mandatRef),
-    groupe   = ou_na(q$auteur$groupe$abrege),
+    id = q$uid,
+    chambre = "AN",
+    type = ou_na(q$type),
+    date = ou_na(tq$infoJO$dateJO),
+    acteur = ou_na(q$auteur$identite$acteurRef),
+    mandat = ou_na(q$auteur$identite$mandatRef),
+    groupe = ou_na(q$auteur$groupe$abrege),
     rubrique = ou_na(idx$rubrique),
-    titre    = ou_na(titre),
-    texte    = ou_na(tq$texte)
+    titre = ou_na(titre),
+    texte = ou_na(tq$texte)
   )
 }
 
@@ -50,7 +48,7 @@ corpus <- corpus[corpus$type == "QE", ]
 
 # Dates au format "19/09/2017" en 15e législature, "2025-10-07" ensuite
 date_iso <- as.Date(corpus$date, format = "%Y-%m-%d")
-date_fr  <- as.Date(corpus$date, format = "%d/%m/%Y")
+date_fr <- as.Date(corpus$date, format = "%d/%m/%Y")
 corpus$date <- ifelse(is.na(date_iso), as.character(date_fr), as.character(date_iso))
 stopifnot(!anyNA(corpus$date), !anyNA(corpus$texte), !anyNA(corpus$mandat))
 
@@ -63,10 +61,9 @@ for (e in names(especes)) {
 corpus <- corpus[rowSums(corpus[names(especes)]) > 0, ]
 
 # Département de l'auteur -----------------------------------------------------
-# Les questions ne donnent que l'identifiant du mandat ; le département est dans
-# le fichier des mandats (un JSON par député). On n'extrait que ceux utiles.
+# Les questions ne donnent que l'identifiant du mandat ; le département est dans le fichier des mandats (un JSON par député). On n'extrait que ceux utiles.
 
-zip_amo     <- here("data", "raw", "AN_acteurs_mandats.zip")
+zip_amo <- here("data", "raw", "AN_acteurs_mandats.zip")
 dossier_amo <- here("data", "raw", "AN_acteurs_mandats")
 if (!file.exists(zip_amo)) {
   curl::curl_download(paste0("https://data.assemblee-nationale.fr/static/openData/repository/17/amo/",
@@ -79,7 +76,7 @@ unzip(zip_amo, files = paste0("json/acteur/", unique(corpus$acteur), ".json"),
 departement_du_mandat <- function(acteur, mandat) {
   f <- file.path(dossier_amo, "json", "acteur", paste0(acteur, ".json"))
   mandats <- fromJSON(f, simplifyVector = FALSE)$acteur$mandats$mandat
-  if (!is.null(mandats$uid)) mandats <- list(mandats)  # un seul mandat : objet et non liste
+  if (!is.null(mandats$uid)) mandats <- list(mandats) # un seul mandat : objet et non liste
   m <- Filter(function(x) x$uid == mandat, mandats)
   stopifnot(length(m) == 1)
   lieu <- m[[1]]$election$lieu
@@ -88,7 +85,7 @@ departement_du_mandat <- function(acteur, mandat) {
 
 deps <- mapply(departement_du_mandat, corpus$acteur, corpus$mandat)
 corpus$departement <- deps["departement", ]
-corpus$code_dep    <- deps["code_dep", ]
+corpus$code_dep <- deps["code_dep", ]
 stopifnot(!anyNA(corpus$departement))
 
 write.csv(corpus, here("data", "processed", "corpus_AN.csv"), row.names = FALSE, fileEncoding = "UTF-8")

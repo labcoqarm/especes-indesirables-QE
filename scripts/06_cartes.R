@@ -1,8 +1,6 @@
 # 06_cartes.R
-# Géographie des questions : taux par département (questions pour 1 million
-# d'habitants), registre dominant, et comparaison selon le type de département.
-# Sorties : figures/fig4_cartes.png, figures/fig5_densite.png,
-#           data/processed/taux_par_densite.csv
+# Géographie des questions : taux par département (questions pour 1 million d'habitants), registre dominant, et comparaison selon le type de département.
+# Sorties : figures/fig4_cartes.png, figures/fig5_densite.png, data/processed/taux_par_densite.csv
 
 library(here)
 library(dplyr)
@@ -17,10 +15,9 @@ geo <- here("data", "raw", "departements.geojson")
 if (!file.exists(geo)) {
   curl::curl_download("https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson", geo)
 }
-departements <- st_read(geo, quiet = TRUE) |> st_transform(2154)  # Lambert-93
+departements <- st_read(geo, quiet = TRUE) |> st_transform(2154) # Lambert-93
 
-# Population des départements : somme des communes de la grille Insee (pop. 2022).
-# Code département = 2 premiers caractères du code commune, 3 pour l'outre-mer.
+# Population des départements : somme des communes de la grille Insee (pop. 2022). Code département = 2 premiers caractères du code commune, 3 pour l'outre-mer.
 communes <- read_excel(here("data", "raw", "insee_grille_densite_2025.xlsx"),
                        sheet = "Maille communale", skip = 4)
 communes$code_dep <- ifelse(startsWith(communes$CODGEO, "97"),
@@ -32,8 +29,7 @@ densite <- read_excel(here("data", "raw", "insee_grille_densite_2025.xlsx"),
   select(code_dep = DEP, densite = LIBDENS)
 
 # Indicateurs par département ---------------------------------------------------
-# Registre dominant : calculé seulement s'il y a au moins 3 questions classées
-# (hors "mixte" et "aucun"), sinon trop fragile.
+# Registre dominant : calculé seulement s'il y a au moins 3 questions classées (hors "mixte" et "aucun"), sinon trop fragile.
 
 registre_dep <- corpus |>
   filter(!type %in% c("mixte", "aucun")) |>

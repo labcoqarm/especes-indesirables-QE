@@ -36,7 +36,7 @@ Toutes ces données sont sous Licence ouverte. Les fichiers bruts (environ 1,5 G
 ## Méthode
 
 1. **Constitution du corpus** (scripts 00 à 03). On garde les questions écrites où l'espèce figure dans le titre ou est citée au moins deux fois. On cherche dans la question seulement, jamais dans la réponse du ministre. Les mêmes motifs de recherche sont appliqués aux deux chambres (`regles_corpus.R`). Quatre faux positifs relus à la main sont retirés (rats de laboratoire, rat cité comme proie du putois).
-2. **Lexicométrie** (script 04, `tidytext`). Fréquences, mots spécifiques de chaque espèce par tf-idf, cooccurrences sous forme de bigrammes.
+2. **Lexicométrie** (script 04, `tidytext`). Fréquences, mots spécifiques de chaque espèce par tf-idf, cooccurrences sous forme de bigrammes, repérage des questions quasi identiques.
 3. **Typologie des discours** (script 05). Dictionnaire de cinq registres (santé, nuisance, biodiversité, économie, action publique). Pour chaque question, on compte les termes de chaque registre et on retient le plus fréquent ; en cas d'égalité, la question est classée « mixte ».
 4. **Géographie** (script 06). Taux de questions pour un million d'habitants par département et par type de département, registre dominant cartographié là où au moins trois questions sont classées.
 
@@ -45,39 +45,34 @@ J'ai préféré un dictionnaire à un topic modeling : avec 388 textes, dont les
 ## Limites
 
 - **Période.** La 14e législature (2012-2017) est absente : le serveur de l'Assemblée coupe le téléchargement de son archive, depuis R comme depuis un navigateur (essais du 24/11/2026). Le Sénat est restreint à la même période pour garder deux sources comparables.
-- **Le département de l'auteur n'est pas le lieu du problème.** Un élu peut relayer une préoccupation nationale ou une campagne d'organisation professionnelle (c'est visiblement le cas des apiculteurs pour le frelon).
+- **Le département de l'auteur n'est pas le lieu du problème.** Un élu peut relayer une préoccupation nationale ou la demande d'une organisation professionnelle.
 - **Le dictionnaire est fait main.** Il ne tient pas compte des négations ni du contexte, et les registres se recouvrent (« logement » compte comme nuisance). Une validation plus solide demanderait un double codage manuel d'un échantillon.
 - **Effectifs faibles.** Rats (6) et chenille processionnaire (20) ne permettent pas de conclusion territoriale. Les cartes ne montrent pas l'outre-mer.
-- **Questions répétées.** Plusieurs élus déposent parfois des questions quasi identiques. Elles sont comptées séparément, ce qui reflète le poids d'une préoccupation au Parlement mais gonfle certains mots.
+- **Questions répétées.** 65 questions sur 388 ont au moins un quasi-doublon, c'est-à-dire une autre question dont plus de 60 % des suites de cinq mots sont identiques (42 sur le frelon, 10 sur le moustique tigre, 9 sur les punaises de lit). Elles sont comptées séparément : cela reflète le poids d'une préoccupation au Parlement, mais gonfle certains mots.
 
 ## Reproduire
 
 Ouvrir `moustique_tigre_QE.Rproj` dans RStudio, puis lancer les scripts dans l'ordre :
 
 ```r
-install.packages(c("here", "stringr", "jsonlite", "curl", "readxl", "dplyr", "tidyr",
-                   "ggplot2", "tidytext", "stopwords", "sf", "gridExtra"))
+install.packages(c("here", "stringr", "jsonlite", "curl", "readxl", "dplyr", "tidyr", "ggplot2", "tidytext", "stopwords", "sf", "gridExtra"))
 
-for (s in c("00_verif_donnees", "01_corpus_AN", "02_corpus_Senat", "03_fusion",
-            "04_lexicometrie", "05_typologie", "06_cartes")) {
+for (s in c("00_verif_donnees", "01_corpus_AN", "02_corpus_Senat", "03_fusion", "04_lexicometrie", "05_typologie", "06_cartes")) {
   source(file.path("scripts", paste0(s, ".R")), encoding = "UTF-8")
 }
 ```
 
 Durée totale : environ 15 minutes, surtout du téléchargement et la lecture des 84 000 fichiers de l'Assemblée.
 
-```
-scripts/
-  00_verif_donnees.R   téléchargement des questions AN
-  regles_corpus.R      motifs des espèces, règle de sélection, nettoyage HTML
-  01_corpus_AN.R       corpus Assemblée nationale + départements des auteurs
-  02_corpus_Senat.R    corpus Sénat (lecture directe du dump)
-  03_fusion.R          fusion, faux positifs, COG, densité
-  04_lexicometrie.R    évolution, tf-idf, bigrammes
-  05_typologie.R       registres de discours
-  06_cartes.R          cartes et comparaison urbain/rural
-data/processed/        corpus et tableaux produits
-figures/               figures
-```
+- `scripts/00_verif_donnees.R` : téléchargement des questions AN
+- `scripts/regles_corpus.R` : motifs des espèces, règle de sélection, nettoyage HTML
+- `scripts/01_corpus_AN.R` : corpus Assemblée nationale et départements des auteurs
+- `scripts/02_corpus_Senat.R` : corpus Sénat (lecture directe du dump)
+- `scripts/03_fusion.R` : fusion, faux positifs, COG, densité
+- `scripts/04_lexicometrie.R` : évolution, tf-idf, bigrammes, quasi-doublons
+- `scripts/05_typologie.R` : registres de discours
+- `scripts/06_cartes.R` : cartes et comparaison urbain/rural
+- `data/processed/` : corpus et tableaux produits
+- `figures/` : figures
 
 Armand Lecoq, novembre 2026.

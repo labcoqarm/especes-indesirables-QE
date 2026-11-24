@@ -1,8 +1,6 @@
 # 04_lexicometrie.R
-# Analyse lexicale du corpus : évolution du nombre de questions, mots les plus
-# spécifiques de chaque espèce (tf-idf) et cooccurrences de mots (bigrammes).
-# Sorties : figures/fig1_evolution.png, figures/fig2_mots_specifiques.png,
-#           data/processed/bigrammes.csv
+# Analyse lexicale du corpus : évolution du nombre de questions, mots les plus spécifiques de chaque espèce (tf-idf) et cooccurrences de mots (bigrammes).
+# Sorties : figures/fig1_evolution.png, figures/fig2_mots_specifiques.png, data/processed/bigrammes.csv
 
 library(here)
 library(dplyr)
@@ -11,10 +9,9 @@ library(ggplot2)
 library(tidytext)
 
 corpus <- read.csv(here("data", "processed", "corpus.csv"))
-corpus$texte <- gsub("['’]", " ", corpus$texte)  # "l'attention" -> "l attention"
+corpus$texte <- gsub("['’]", " ", corpus$texte) # "l'attention" -> "l attention"
 
-# Mots vides : liste standard du français, formules propres aux questions
-# écrites, et noms des espèces (sinon ils sortent en tête partout)
+# Mots vides : liste standard du français, formules propres aux questions écrites, et noms des espèces (sinon ils sortent en tête partout)
 mots_vides <- c(
   get_stopwords("fr")$word,
   "attire", "appelle", "attention", "interroge", "alerte", "ministre", "ministère",
@@ -47,9 +44,7 @@ ggplot(par_an, aes(annee, n)) +
 ggsave(here("figures", "fig1_evolution.png"), width = 9, height = 5, dpi = 300)
 
 # Figure 2 : mots spécifiques de chaque espèce (tf-idf) -----------------------
-# On compte dans combien de questions chaque mot apparaît, par espèce.
-# Le tf-idf fait ressortir les mots fréquents pour une espèce et rares ailleurs.
-# Un mot doit apparaître dans au moins 2 questions pour éviter les cas isolés.
+# On compte dans combien de questions chaque mot apparaît, par espèce. Le tf-idf fait ressortir les mots fréquents pour une espèce et rares ailleurs. Un mot doit apparaître dans au moins 2 questions pour éviter les cas isolés.
 
 mots <- corpus |>
   unnest_tokens(mot, texte) |>
@@ -84,3 +79,16 @@ bigrammes <- corpus |>
 write.csv(bigrammes, here("data", "processed", "bigrammes.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 
 print(bigrammes |> group_by(espece) |> slice_head(n = 5), n = 25)
+
+# Questions quasi identiques : deux questions dont plus de 60 % des suites de 5 mots sont communes (rapporté au texte le plus court)
+cinq_mots <- corpus |> unnest_tokens(g, texte, token = "ngrams", n = 5) |> distinct(id, g)
+cinq_mots <- split(cinq_mots$g, cinq_mots$id)
+paires <- combn(names(cinq_mots), 2)
+recouvrement <- apply(paires, 2, function(p) {
+  a <- cinq_mots[[p[1]]]
+  b <- cinq_mots[[p[2]]]
+  length(intersect(a, b)) / min(length(a), length(b))
+})
+doublons <- unique(c(paires[, recouvrement > 0.6]))
+cat("\nQuestions ayant au moins un quasi-doublon :", length(doublons), "sur", nrow(corpus), "\n")
+print(table(corpus$espece[corpus$id %in% doublons]))
