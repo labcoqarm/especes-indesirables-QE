@@ -1,0 +1,10 @@
+# Données brutes : trop lourdes pour GitHub (zips AN + dump Sénat = ~500 Mo)
+# Elles se retéléchargent avec scripts/00_verif_donnees.R
+data/raw/*
+!data/raw/.gitkeep
+
+# Fichiers internes de RStudio et de R
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
