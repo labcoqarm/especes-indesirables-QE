@@ -8,6 +8,13 @@ library(stringr)
 library(readxl)
 source(here("scripts", "regles_corpus.R"))
 
+# Fichiers Insee : liste des départements (COG 2025) et grille de densité 2025
+insee <- c(insee_departements_2025.csv = "https://www.insee.fr/fr/statistiques/fichier/8377162/v_departement_2025.csv",
+           insee_grille_densite_2025.xlsx = "https://www.insee.fr/fr/statistiques/fichier/8571524/fichier_diffusion_2025.xlsx")
+for (f in names(insee)) {
+  if (!file.exists(here("data", "raw", f))) curl::curl_download(insee[[f]], here("data", "raw", f))
+}
+
 an    <- read.csv(here("data", "processed", "corpus_AN.csv"), colClasses = c(code_dep = "character"))
 senat <- read.csv(here("data", "processed", "corpus_Senat.csv"), colClasses = c(code_dep = "character"))
 corpus <- rbind(an, senat)
