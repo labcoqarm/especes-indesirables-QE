@@ -37,9 +37,7 @@ par_an <- count(corpus, annee, espece)
 ggplot(par_an, aes(annee, n)) +
   geom_col(fill = "grey40") +
   facet_wrap(~ espece, scales = "free_y", labeller = libelles) +
-  labs(x = NULL, y = "Questions écrites",
-       title = "Questions écrites par espèce (AN + Sénat)",
-       caption = "2017 : à partir du 21 juin. 2026 : jusqu'à novembre.") +
+  labs(x = NULL, y = "Questions écrites", title = "Questions écrites par espèce (AN + Sénat)", caption = "2017 : à partir du 21 juin. 2026 : jusqu'à novembre.") +
   theme_minimal(base_family = "sans")
 ggsave(here("figures", "fig1_evolution.png"), width = 9, height = 5, dpi = 300)
 
@@ -72,8 +70,7 @@ ggsave(here("figures", "fig2_mots_specifiques.png"), width = 10, height = 6, dpi
 bigrammes <- corpus |>
   unnest_tokens(bigramme, texte, token = "ngrams", n = 2) |>
   separate(bigramme, c("mot1", "mot2"), sep = " ") |>
-  filter(!mot1 %in% mots_vides, !mot2 %in% mots_vides,
-         !grepl("[0-9]", mot1), !grepl("[0-9]", mot2)) |>
+  filter(!mot1 %in% mots_vides, !mot2 %in% mots_vides, !grepl("[0-9]", mot1), !grepl("[0-9]", mot2)) |>
   count(espece, mot1, mot2, sort = TRUE)
 
 write.csv(bigrammes, here("data", "processed", "bigrammes.csv"), row.names = FALSE, fileEncoding = "UTF-8")

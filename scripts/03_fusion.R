@@ -8,8 +8,7 @@ library(readxl)
 source(here("scripts", "regles_corpus.R"))
 
 # Fichiers Insee : liste des départements (COG 2025) et grille de densité 2025
-insee <- c(insee_departements_2025.csv = "https://www.insee.fr/fr/statistiques/fichier/8377162/v_departement_2025.csv",
-           insee_grille_densite_2025.xlsx = "https://www.insee.fr/fr/statistiques/fichier/8571524/fichier_diffusion_2025.xlsx")
+insee <- c(insee_departements_2025.csv = "https://www.insee.fr/fr/statistiques/fichier/8377162/v_departement_2025.csv", insee_grille_densite_2025.xlsx = "https://www.insee.fr/fr/statistiques/fichier/8571524/fichier_diffusion_2025.xlsx")
 for (f in names(insee)) {
   if (!file.exists(here("data", "raw", f))) curl::curl_download(insee[[f]], here("data", "raw", f))
 }
@@ -40,16 +39,14 @@ corpus$departement <- cog$LIBELLE[match(corpus$code_dep, cog$DEP)]
 stopifnot(!anyNA(corpus$code_dep), !anyNA(corpus$departement))
 
 # Typologie de densité des départements (Insee, grille 2025, onglet départemental)
-densite <- read_excel(here("data", "raw", "insee_grille_densite_2025.xlsx"),
-                      sheet = "Maille départementale", skip = 4)
+densite <- read_excel(here("data", "raw", "insee_grille_densite_2025.xlsx"), sheet = "Maille départementale", skip = 4)
 i <- match(corpus$code_dep, densite$DEP)
 corpus$densite <- densite$LIBDENS[i]
 corpus$part_rural <- round(densite$P_RURAL[i], 1)
 stopifnot(!anyNA(corpus$densite))
 
 corpus$annee <- as.integer(substr(corpus$date, 1, 4))
-corpus <- corpus[, c("id", "chambre", "date", "annee", "espece", "departement", "code_dep",
-                     "densite", "part_rural", "acteur", "groupe", "rubrique", "titre", "texte")]
+corpus <- corpus[, c("id", "chambre", "date", "annee", "espece", "departement", "code_dep", "densite", "part_rural", "acteur", "groupe", "rubrique", "titre", "texte")]
 
 write.csv(corpus, here("data", "processed", "corpus.csv"), row.names = FALSE, fileEncoding = "UTF-8")
 

@@ -66,12 +66,9 @@ corpus <- corpus[rowSums(corpus[names(especes)]) > 0, ]
 zip_amo <- here("data", "raw", "AN_acteurs_mandats.zip")
 dossier_amo <- here("data", "raw", "AN_acteurs_mandats")
 if (!file.exists(zip_amo)) {
-  curl::curl_download(paste0("https://data.assemblee-nationale.fr/static/openData/repository/17/amo/",
-                             "tous_acteurs_mandats_organes_xi_legislature/",
-                             "AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip"), zip_amo)
+  curl::curl_download(paste0("https://data.assemblee-nationale.fr/static/openData/repository/17/amo/", "tous_acteurs_mandats_organes_xi_legislature/", "AMO30_tous_acteurs_tous_mandats_tous_organes_historique.json.zip"), zip_amo)
 }
-unzip(zip_amo, files = paste0("json/acteur/", unique(corpus$acteur), ".json"),
-      exdir = dossier_amo, overwrite = TRUE)
+unzip(zip_amo, files = paste0("json/acteur/", unique(corpus$acteur), ".json"), exdir = dossier_amo, overwrite = TRUE)
 
 departement_du_mandat <- function(acteur, mandat) {
   f <- file.path(dossier_amo, "json", "acteur", paste0(acteur, ".json"))

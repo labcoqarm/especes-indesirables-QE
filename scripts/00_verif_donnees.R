@@ -5,15 +5,12 @@ library(stringr)
 library(here)
 
 legislatures <- 15:17
-noms_zip <- c("15" = "Questions_ecrites_XV.json.zip",
-              "16" = "Questions_ecrites.json.zip",
-              "17" = "Questions_ecrites.json.zip")
+noms_zip <- c("15" = "Questions_ecrites_XV.json.zip", "16" = "Questions_ecrites.json.zip", "17" = "Questions_ecrites.json.zip")
 
 motif <- regex("moustiques?(\\s|-|&nbsp;|&#160;)+tigres?|albopictus", ignore_case = TRUE)
 
 compter_legislature <- function(leg) {
-  url <- paste0("https://data.assemblee-nationale.fr/static/openData/repository/",
-                leg, "/questions/questions_ecrites/", noms_zip[as.character(leg)])
+  url <- paste0("https://data.assemblee-nationale.fr/static/openData/repository/", leg, "/questions/questions_ecrites/", noms_zip[as.character(leg)])
   zip_local <- here("data", "raw", paste0("AN_QE_leg", leg, ".zip"))
   dossier <- here("data", "raw", paste0("AN_QE_leg", leg))
 
@@ -36,9 +33,7 @@ compter_legislature <- function(leg) {
     str_detect(txt, motif)
   }, logical(1), USE.NAMES = FALSE)
 
-  write.csv(data.frame(fichier = fichiers[trouve]),
-            here("data", "processed", paste0("AN_leg", leg, "_fichiers_moustique.csv")),
-            row.names = FALSE)
+  write.csv(data.frame(fichier = fichiers[trouve]), here("data", "processed", paste0("AN_leg", leg, "_fichiers_moustique.csv")), row.names = FALSE)
 
   data.frame(legislature = leg, n_questions = length(fichiers), n_moustique = sum(trouve))
 }
