@@ -49,16 +49,38 @@ stopifnot(!anyNA(carte$pop))
 
 noms_registres <- c(sante = "Santé", nuisance = "Nuisance", biodiversite = "Biodiversité", economie = "Économie", action_publique = "Action publique")
 
+# Échelle et flèche du nord, dessinées avec ggplot2 seul (carte en Lambert-93, unités en mètres)
+echelle_nord <- function(emprise, km) {
+  larg <- emprise[["xmax"]] - emprise[["xmin"]]
+  haut <- emprise[["ymax"]] - emprise[["ymin"]]
+  dx <- km * 1000
+  h <- haut * 0.012
+  x0 <- emprise[["xmin"]] + larg * 0.02
+  y0 <- emprise[["ymin"]] + haut * 0.02
+  xn <- emprise[["xmax"]] - larg * 0.05
+  yn <- emprise[["ymax"]] - haut * 0.15
+  list(
+    annotate("rect", xmin = x0, xmax = x0 + dx / 2, ymin = y0, ymax = y0 + h, fill = "black", colour = "black"),
+    annotate("rect", xmin = x0 + dx / 2, xmax = x0 + dx, ymin = y0, ymax = y0 + h, fill = "white", colour = "black"),
+    annotate("text", x = c(x0, x0 + dx / 2, x0 + dx), y = y0 + 3 * h, label = c("0", km / 2, paste(km, "km")), size = 2.5),
+    annotate("segment", x = xn, xend = xn, y = yn, yend = yn + 8 * h, arrow = arrow(length = unit(2, "mm"), type = "closed")),
+    annotate("text", x = xn, y = yn + 11 * h, label = "N", fontface = "bold", size = 3.5)
+  )
+}
+emprise <- st_bbox(carte)
+
 carte_taux <- ggplot(carte) +
   geom_sf(aes(fill = taux), colour = "white", linewidth = 0.1) +
   scale_fill_distiller(palette = "YlOrBr", direction = 1, name = "Questions\npar million\nd'habitants") +
   labs(title = "Volume de questions") +
+  echelle_nord(emprise, 200) +
   theme_void() + theme(plot.title = element_text(hjust = 0.5))
 
 carte_registre <- ggplot(carte) +
   geom_sf(aes(fill = registre), colour = "white", linewidth = 0.1) +
   scale_fill_manual(values = c(sante = "#66c2a5", nuisance = "#fc8d62", biodiversite = "#8da0cb", economie = "#e78ac3", action_publique = "#a6d854"), labels = noms_registres, na.value = "grey90", name = "Registre dominant\n(gris : moins de\n3 questions)") +
   labs(title = "Registre dominant") +
+  echelle_nord(emprise, 200) +
   theme_void() + theme(plot.title = element_text(hjust = 0.5))
 
 png(here("figures", "fig4_cartes.png"), width = 10, height = 5, units = "in", res = 300)
